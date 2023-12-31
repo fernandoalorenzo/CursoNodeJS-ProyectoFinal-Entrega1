@@ -4,27 +4,20 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 
-const CardModalAdd = ({ onSave, onCancel }) => {
+const CardModalAgregar = ({ onSave, onCancel }) => {
 	const [usuario, setUsuario] = useState("");
 	const [comentario, setComentario] = useState("");
 	const [isGuardarDisabled, setGuardarDisabled] = useState(true);
 
 	const handleInputChange = (e) => {
-    const { name, value } = e.target;
+		const { name, value } = e.target;
 
-	// Actualizar el estado segun el campo que cambio
-	if (name === "usuario") {
-		setUsuario(value);
-	} else if (name === "comentario") {
+		// Actualizar el estado segun el campo que cambio
+		if (name === "usuario") {
+			setUsuario(value);
+		} else if (name === "comentario") {
 		setComentario(value);
-	}
-
-	console.log("usuario: ", usuario);
-	console.log("comentario: ", comentario);
-
-	console.log("value.trim: ", value.trim());
-	console.log("comentario.trim: ", comentario.trim());
-	console.log("usuario.trim: ", usuario.trim());
+		}
 	};
 
 	useEffect(() => {
@@ -118,4 +111,4 @@ const CardModalAdd = ({ onSave, onCancel }) => {
 	);
 };
 
-export default CardModalAdd;
+export default CardModalAgregar;

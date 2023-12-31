@@ -2,10 +2,12 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import CardModalInfoComments from "./CardModalInfoComments";
-import CardModalDelete from "./CardModalConfirmDelete";
+import ModalDelete from "./../delete/ModalConfirmDelete";
+import { Toaster } from "react-hot-toast";
+import { ToastOK } from "../toast/Toast";
 
 export default function Modal(props) {
-	const [cardModalDelete, setCardModalDelete] = useState(false);
+	const [modalDelete, setModalDelete] = useState(false);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedTitle, setEditedTitle] = useState(props.titulo);
@@ -26,7 +28,7 @@ export default function Modal(props) {
 	};
 
 	const handleDeleteClick = () => {
-		setCardModalDelete(true);
+		setModalDelete(true);
 	};
 
 	const handleSaveClick = async () => {
@@ -52,6 +54,9 @@ export default function Modal(props) {
 
 			setIsEditing(false);
 
+			// Muestra notificacion
+			ToastOK("Posteo", "modificado");
+
 			props.fetchData();
 		} catch (error) {
 			console.error(
@@ -67,9 +72,12 @@ export default function Modal(props) {
 				method: "DELETE",
 			});
 
-			setCardModalDelete(false);
+			setModalDelete(false);
 
 			props.onClose();
+
+			// Muestra notificacion
+			ToastOK("Posteo", "eliminado");
 
 			props.fetchData();
 		} catch (error) {
@@ -86,7 +94,7 @@ export default function Modal(props) {
 
 	const handleCancelDelete = () => {
 		// Cierra el modal de confirmacion
-		setCardModalDelete(false);
+		setModalDelete(false);
 	};
 
 	let modalStyle = {
@@ -104,7 +112,7 @@ export default function Modal(props) {
 					<div className="modal-content">
 						<div className="card-header">
 							<div className="row">
-								<div className="col-8 m-0">
+								<div className="col m-0">
 									{!isEditing ? (
 										<h5 className="card-title text-start">
 											{props.titulo}
@@ -119,29 +127,28 @@ export default function Modal(props) {
 									<>
 										<div className="col-1 mr-1 px-1">
 											<i
-												className="fa-regular fa-edit fa-lg"
-												style={{ color: "#031faa" }}
+												className="btn fa-solid fa-regular fa-edit fa-lg"
+												style={{ color: "RGB(255, 202,44)" }}
 												onClick={handleEditClick}
 												title="Editar posteo"></i>
 										</div>
 										<div className="col-1 mr-1 px-3">
 											<i
-												
-												className="fa-regular fa-trash-can fa-lg"
-												style={{color: "#ff0000"}}
+												className="btn fa-regular fa-trash-can fa-lg"
+												style={{ color: "#ff0000" }}
 												onClick={handleDeleteClick}
 												title="Eliminar posteo"></i>
 										</div>
+										<div className="col-1 mx-3 px-3">
+											<button
+												type="button"
+												className="btn-close"
+												onClick={() =>
+													props.onClose()
+												}></button>
+										</div>
 									</>
 								)}
-								<div className="col-1 mx-3 px-3">
-									<button
-										type="button"
-										className="btn-close"
-										onClick={() =>
-											props.onClose()
-										}></button>
-								</div>
 							</div>
 						</div>
 						{isEditing && (
@@ -257,18 +264,19 @@ export default function Modal(props) {
 				</div>
 			</div>
 			{/* Modal de confirmación para eliminar posteo*/}
-			{cardModalDelete === true ? (
-				<CardModalDelete
+			{modalDelete === true ? (
+				<ModalDelete
 					onConfirm={() => {
 						handleDelete();
-						setCardModalDelete(false);
+						setModalDelete(false);
 					}}
-					onCancel={() => setCardModalDelete(false)}
+					onCancel={() => setModalDelete(false)}
 					tipoEliminacion={"posteo"}
 				/>
 			) : (
 				""
 			)}
+			<Toaster />
 		</>
 	);
 }

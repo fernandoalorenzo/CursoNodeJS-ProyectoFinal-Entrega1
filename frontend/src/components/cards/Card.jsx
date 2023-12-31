@@ -10,7 +10,9 @@ const Card = ({ titulo, imagen, descripcion, _id , fetchData }) => {
 
 	return (
 		<>
-			<div className="card" style={{ minHeight: "23rem", maxHeight: "23rem" }}>
+			<div
+				className="card"
+				style={{ minHeight: "23rem", maxHeight: "23rem" }}>
 				<div className="card-header">
 					<div className="row">
 						<div className="col-9">
@@ -26,12 +28,14 @@ const Card = ({ titulo, imagen, descripcion, _id , fetchData }) => {
 				</div>
 				<img
 					src={imagen}
-					className="card-img-top card-img"
+					className="card-img img-thumbnail img-fluid img-responsive"
 					alt={titulo}
 				/>
 				<div className="card-body">
 					{descripcion.length > maxDescriptionLength ? (
-						<p className="card-text text-start">{descripcion.slice(0, maxDescriptionLength) + "..."}</p>
+						<p className="card-text text-start">
+							{descripcion.slice(0, maxDescriptionLength) + "..."}
+						</p>
 					) : (
 						<p className="card-text text-start">{descripcion}</p>
 					)}

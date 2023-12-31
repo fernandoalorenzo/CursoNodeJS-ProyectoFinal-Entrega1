@@ -1,0 +1,19 @@
+.card-img {
+    min-height: 12rem;
+    max-height: 12rem;
+    object-fit: cover;
+    object-position: center;
+    width: 100%
+}
+
+.card-img-modal-info {
+    object-fit: cover;
+    object-position: center;
+    width: 100%
+}
+
+.card-img-modal-agregar {
+    object-fit: cover;
+    object-position: center;
+    width: 100%
+}

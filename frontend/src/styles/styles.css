@@ -1,9 +1,16 @@
+@import 'logo.css';
+@import 'cards.css';
+@import 'navbar.css';
+@import 'footer.css';
+@import '404.css';
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
+  COLOR:  #0dc71a;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -21,63 +28,6 @@ body {
   min-height: 100vh;
   padding-top: 7rem;
   padding-bottom: 3.5rem;
-}
-
-footer {
-  font-size: 1.1rem;
-  vertical-align: middle;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  font-weight: 500;
-  color: #e7f253;
-  bottom: 0;
-  position: fixed;
-  min-width: 100%;
-  max-width: 100%;
-  height: 4rem;
-}
-
-.logo-img {
-  width: 8rem;
-  height: 5rem;
-  margin-top: .5rem;
-  align-content: center;
-  align-items: center;
-}
-
-.logo-titulo {
-  font-size: 2.8rem;
-  color: #0088ff;
-  padding-left: 1.8rem;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-  font-weight: 700;
-}
-
-.card-img {
-  min-height: 12rem;
-  max-height: 12rem;
-  object-fit: cover;
-  object-position: center;
-  width: 100%
-}
-
-.card-img-modal-info {
-  object-fit: cover;
-  object-position: center;
-  width: 100%
-}
-
-.card-img-modal-agregar {
-  object-fit: cover;
-  object-position: center;
-  width: 100%
-}
-
-.nav-item {
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-decoration: none;
-  
 }
 
 .gradient-custom {
@@ -106,28 +56,4 @@ footer {
     padding-bottom: 0.25rem;
   }
 
-  .logo-img {
-    width: 4rem;
-    height: 1.8rem;
-    margin-top: .5rem;
-    align-content: center;
-    align-items: center;
-    padding-right: 0;
-    margin-right: 0;
-  }
-
-  .logo-titulo {
-    font-size: 1.5rem;
-    color: #0088ff;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-weight: 700;
-    margin-left: 0;
-    padding-left: 0;
-  }
-
-  .nav-item {
-    font-size: 1.2rem;
-    font-weight: 600;
-    text-decoration: none;
-  }
 }

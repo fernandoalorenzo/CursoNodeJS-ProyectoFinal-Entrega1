@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 
-const CardModalDelete = ({ onCancel, onConfirm, tipoEliminacion }) => {
+const UserModalDelete = ({ onCancel, onConfirm, tipoEliminacion }) => {
 	return (
 		<div
 			className="modal fade show"
@@ -16,7 +16,8 @@ const CardModalDelete = ({ onCancel, onConfirm, tipoEliminacion }) => {
 						<button
 							type="button"
 							className="btn-close"
-							onClick={onCancel}></button>
+							onClick={onCancel}>
+						</button>
 					</div>
 					<div className="modal-body">
 						<p>
@@ -44,4 +45,4 @@ const CardModalDelete = ({ onCancel, onConfirm, tipoEliminacion }) => {
 	);
 };
 
-export default CardModalDelete;
+export default UserModalDelete;

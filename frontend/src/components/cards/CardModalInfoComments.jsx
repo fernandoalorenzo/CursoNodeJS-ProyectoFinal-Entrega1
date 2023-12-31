@@ -1,8 +1,10 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
-import CardModalDelete from "./CardModalConfirmDelete";
-import CardModalAdd from "./CardModalInfoCommentsAdd";
+import ModalDelete from "./../delete/ModalConfirmDelete";
+import CardModalAgregar from "./CardModalInfoCommentsAgregar";
+import { Toaster } from "react-hot-toast";
+import { ToastError, ToastOK } from "../toast/Toast";
 
 const CardModalInfoComments = ({ postId }) => {
 	const [comentarios, setComentarios] = useState([]);
@@ -10,7 +12,7 @@ const CardModalInfoComments = ({ postId }) => {
 	const [deleteCommentId, setDeleteCommentId] = useState(null);
 
 	// ESTADO DE MODAL PARA NUEVOS COMENTARIOS
-	const [showAddModal, setShowAddModal] = useState(false);
+	const [showAgregarModal, setShowAgregarModal] = useState(false);
 
 	useEffect(() => {
 		const fetchComentarios = async () => {
@@ -67,6 +69,9 @@ const CardModalInfoComments = ({ postId }) => {
 
 			// Oculta el formulario de edicion
 			setEditCommentId(null);
+
+			// Muestra notificacion
+			ToastOK("Comentario", "modificado");
 		} catch (error) {
 			console.error(
 				"Error al intentar guardar la edición del comentario: ",
@@ -117,6 +122,9 @@ const CardModalInfoComments = ({ postId }) => {
 
 			// Ocultar modal de eliminacion
 			handleHideDeleteModal();
+
+			// Mostrar Toast
+			ToastOK("Comentario", "eliminado");
 		} catch (error) {
 			console.error("Error al intentar eliminar el comentario: ", error);
 		}
@@ -134,8 +142,8 @@ const CardModalInfoComments = ({ postId }) => {
 
 	// ------------------ Desde aca, todo para agregar un nuevo comentario ------------------
 	// Abre modal para agregar comentario
-	const handleShowAddModal = () => {
-		setShowAddModal(true);
+	const handleShowAgregarModal = () => {
+		setShowAgregarModal(true);
 	};
 	// Guardar nuevo comentario
 	const handleSaveComment = async ({ usuario, comentario }) => {
@@ -162,6 +170,7 @@ const CardModalInfoComments = ({ postId }) => {
 			const updatedResponse = await fetch(
 				`http://127.0.0.1:5000/comments/${postId}`
 			);
+
 			if (!updatedResponse.ok) {
 				throw new Error(
 					`HTTP error! Status: ${updatedResponse.status}`
@@ -171,9 +180,15 @@ const CardModalInfoComments = ({ postId }) => {
 			setComentarios(updatedData.comentarios);
 
 			// Ocultar modal agregar comentario
-			setShowAddModal(false);
+			setShowAgregarModal(false);
+
+			// Mostrar Toast OK
+			ToastOK("Comentario", "guardado");
 		} catch (error) {
 			console.error("Error al intentar guardar el comentario: ", error);
+
+			// Mostrar Toast ERROR
+			ToastError("comentario", "guardar");
 		}
 	};
 
@@ -200,7 +215,7 @@ const CardModalInfoComments = ({ postId }) => {
 							className="btn btn-sm btn-success position-relative align-self-end"
 							type="button"
 							name="agregarComentario"
-							onClick={handleShowAddModal}
+							onClick={handleShowAgregarModal}
 							title="Nuevo comentario">
 							<i className="fa-solid fa-comment-dots"></i>
 						</button>
@@ -258,26 +273,27 @@ const CardModalInfoComments = ({ postId }) => {
 									<div className="row justify-content-between">
 										<div className="col align-items-start">
 											<p className="text-muted text-start align-items-start">
-												Publicado el {comentario.fecha
-													&& comentario.fecha.substr(
-															8,
-															2
-													) +
-													"/" +
+												Publicado el{" "}
+												{comentario.fecha &&
 													comentario.fecha.substr(
+														8,
+														2
+													) +
+														"/" +
+														comentario.fecha.substr(
 															5,
 															2
-													) +
-													"/" +
-													comentario.fecha.substr(
+														) +
+														"/" +
+														comentario.fecha.substr(
 															0,
 															4
-													)}
+														)}
 											</p>
 										</div>
 										<div className="col-3 align-items-end justify-content-end me-0">
 											<button
-												className="btn btn-sm btn-primary me-2"
+												className="btn btn-sm btn-warning me-2"
 												onClick={() =>
 													handleEdit(comentario._id)
 												}
@@ -303,18 +319,19 @@ const CardModalInfoComments = ({ postId }) => {
 				</div>
 			))}
 			{deleteCommentId && (
-				<CardModalDelete
+				<ModalDelete
 					onCancel={handleHideDeleteModal}
 					onConfirm={handleConfirmDelete}
 					tipoEliminacion="comentario"
 				/>
 			)}
-			{showAddModal && (
-				<CardModalAdd
+			{showAgregarModal && (
+				<CardModalAgregar
 					onSave={handleSaveComment}
-					onCancel={() => setShowAddModal(false)}
+					onCancel={() => setShowAgregarModal(false)}
 				/>
 			)}
+			<Toaster />
 		</>
 	);
 };
