@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 
 const postSchema = mongoose.Schema(
 	{
+		usuario: {
+			type: String
+		},
 		titulo: {
 			type: String,
 			required: true,
@@ -18,17 +21,16 @@ const postSchema = mongoose.Schema(
 			{
 				usuario: {
 					type: String,
-					default: ""
+					default: "",
 				},
 				contenido: {
 					type: String,
-					default: ""
+					default: "",
 				},
 				fecha: {
 					type: Date,
-					default: Date.now
-				}
-				
+					default: Date.now,
+				},
 			},
 		],
 	},

@@ -3,11 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { ToastOK } from "../toast/Toast";
+import apiConnection from "../../../../backend/functions/apiConnection";
 
 const ModalAgregar = (props) => {
 	const [titulo, setTitulo] = useState("");
 	const [descripcion, setDescripcion] = useState("");
 	const [imagenUrl, setImagenUrl] = useState("");
+
+	const user = JSON.parse(localStorage.getItem("user"));
+	const userId = user ? user.id : null;
 
 	const handleImagenUrlChange = (event) => {
 		setImagenUrl(event.target.value);
@@ -16,20 +20,26 @@ const ModalAgregar = (props) => {
 	useEffect(() => {
 		const cargarDatosExistente = async () => {
 			try {
-				const response = await fetch(
-					`http://127.0.0.1:5000/posts/${props.postId}`
+				const endpoint = "http://127.0.0.1:5000/posts/";
+				const direction = props.postId;
+				const method = "GET";
+				const body = false;
+				const headers = {
+					"Content-Type": "application/json",
+					Authorization: localStorage.getItem("token"),
+				};
+
+				const data = await apiConnection(
+					endpoint,
+					direction,
+					method,
+					body,
+					headers
 				);
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! Status: ${response.status}`);
-				}
-
-				const data = await response.json();
 
 				setTitulo(data.titulo);
 				setDescripcion(data.descripcion);
 				setImagenUrl(data.imagen);
-
 			} catch (error) {
 				console.error(
 					"Error al intentar obtener datos para editar: ",
@@ -44,32 +54,42 @@ const ModalAgregar = (props) => {
 
 	const handleGuardarPost = async () => {
 		const data = {
+			usuario: userId,
 			titulo,
 			descripcion,
 			imagen: imagenUrl
 		};
 
 		try {
-			const response = await fetch("http://127.0.0.1:5000/posts", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(data),
-			});
+			const endpoint = "http://127.0.0.1:5000/posts/";
+			const direction = "";
+			const method = "POST";
+			const body = {
+				usuario: userId,
+				titulo: titulo,
+				descripcion: descripcion,
+				imagen: imagenUrl,
+			};
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
 
-			if (!response.ok) {
-				throw new Error("Hubo un error en la petición.");
-			}
+			await apiConnection(
+				endpoint,
+				direction,
+				method,
+				body,
+				headers
+			);
 
 			// CIERRA EL MODAL DESPUÉS DE GUARDAR
 			props.onClose();
 
 			// MUESTRA NOTIFICACIÓN
 			ToastOK("Posteo", "agregado");
-
 		} catch (error) {
-			console.error("Error:", error);
+			console.error("Error: ", error.message);
 		}
 	};
 

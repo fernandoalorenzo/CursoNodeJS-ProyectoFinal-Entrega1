@@ -4,8 +4,10 @@ import Card from "./Card.jsx";
 import CardModalAgregar from "./CardModalAgregar.jsx";
 import { ToastOK } from "../toast/Toast.jsx";
 import { Toaster } from "react-hot-toast";
+import apiConnection from "../../../../backend/functions/apiConnection.js";
 
 const CardsList = (posts) => {
+
 	const [data, setData] = useState([]);
 	const [modalInfo, setModalInfo] = useState(false);
 	const [modalAgregar, setModalAgregar] = useState(false);
@@ -23,13 +25,24 @@ const CardsList = (posts) => {
 
 	const fetchData = async () => {
 		try {
-			const response = await fetch("http://127.0.0.1:5000/posts");
-			if (!response.ok) {
-				throw new Error(`HTTP error! Status: ${response.status}`);
-			}
-			const data = await response.json();
-			// console.log(data.data);
-			setData(data.data);
+			const endpoint = "http://127.0.0.1:5000/posts/";
+			const direction = ""
+			const method = "GET";
+			const body = false;
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
+
+			const response = await apiConnection(
+				endpoint,
+				direction,
+				method,
+				body,
+				headers
+			);
+
+			setData(response.data);
 
 			return setModalInfo(true);
 		} catch (error) {
@@ -81,7 +94,7 @@ const CardsList = (posts) => {
 						<div className="col-sm-2 d-flex p-3 justify-content-center my-1">
 							<button
 								className="btn btn-success d-grip border border-light"
-								style={{ width: "100%" }}
+								style={{ width: "100%", minWidth: "6rem" }}
 								onClick={handleSearch}>
 								<i
 									className="fa-solid fa-magnifying-glass fa-xl me-3"
@@ -92,7 +105,7 @@ const CardsList = (posts) => {
 						<div className="col-sm-2 d-flex p-3 justify-content-center my-1">
 							<button
 								className="btn btn-dark d-grip border border-light"
-								style={{ width: "100%" }}
+								style={{ width: "100%", minWidth: "6rem" }}
 								onClick={clearSearch}>
 								<i
 									className="fa-solid fa-broom fa-xl me-3"
@@ -102,18 +115,22 @@ const CardsList = (posts) => {
 						</div>
 					</div>
 				</div>
-				<div className="row justify-content-center row-cols-auto">
+				<div className="row justify-content-center row-cols-auto mt-5">
 					{data.map((card) => (
 						<div
-							className="m-4 mx-3"
+							className="card-size m-2 p-1"
 							key={card._id}
-							style={{ width: "18rem" }}>
-							<div className="card">
+						>
+							<div>
 								<Card
 									titulo={card.titulo}
 									descripcion={card.descripcion}
 									imagen={card.imagen}
+									usuario={card.usuario}
+									nombre={card.nombre}
+									apellido={card.apellido}
 									_id={card._id}
+									publicado={card.createdAt}
 									onInfoClick={() => setModalInfo(true)}
 									fetchData={fetchData}
 								/>

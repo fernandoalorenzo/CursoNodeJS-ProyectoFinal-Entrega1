@@ -5,6 +5,7 @@ import ModalDelete from "./../delete/ModalConfirmDelete";
 import CardModalAgregar from "./CardModalInfoCommentsAgregar";
 import { Toaster } from "react-hot-toast";
 import { ToastError, ToastOK } from "../toast/Toast";
+import apiConnection from "../../../../backend/functions/apiConnection";
 
 const CardModalInfoComments = ({ postId }) => {
 	const [comentarios, setComentarios] = useState([]);
@@ -14,24 +15,108 @@ const CardModalInfoComments = ({ postId }) => {
 	// ESTADO DE MODAL PARA NUEVOS COMENTARIOS
 	const [showAgregarModal, setShowAgregarModal] = useState(false);
 
+	// FUNCION PARA MOSTRAR LOS COMENTARIOS
+	const fetchData = async (
+		postEndpoint,
+		postDirection,
+		postMethod,
+		postBody
+	) => {
+		try {
+			const endpoint = `http://127.0.0.1:5000/${postEndpoint}/`;
+			const direction = postDirection;
+			const method = postMethod;
+			const body = postBody || false;
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
+
+			const data = await apiConnection(
+				endpoint,
+				direction,
+				method,
+				body,
+				headers
+			);
+			return data;
+		} catch (error) {
+			console.error(
+				`Error al intentar obtener datos de ${postEndpoint}: `,
+				error
+			);
+			throw new Error(
+				`Error al intentar obtener datos de ${postEndpoint}`
+			);
+		}
+	};
+
+	// FUNCION PARA OBTENER EL NOMBRE DEL USUARIO
+	const fetchUserName = async (userId) => {
+		try {
+			const endpoint = "http://127.0.0.1:5000/users/";
+			const direction = userId;
+			const method = "GET";
+			const body = false;
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
+
+			const user = await apiConnection(
+				endpoint,
+				direction,
+				method,
+				body,
+				headers
+			);
+
+			return `${user.nombre} ${user.apellido}`;
+		} catch (error) {
+			console.error("Error al obtener el nombre del usuario: ", error);
+			throw new Error("Error al obtener el nombre del usuario");
+		}
+	};
+	
+	// FUNCION PARA BUSCAR EL NOMBRE DEL USUARIO EN LA BASE DE DATOS PARA CADA COMENTARIO
+	const assignUserNameToComments = async (comments) => {
+		return await Promise.all(
+			comments.map(async (comentario) => {
+				const userName = await fetchUserName(comentario.usuario);
+				return {
+					...comentario,
+					userName,
+				};
+			})
+		);
+	};
+
+	// BUSCA Y MUESTRA EL NOMBRE DEL USUARIO EN CADA COMENTARIO
 	useEffect(() => {
+		// CARGAMOS LOS COMENTARIOS AL CARGAR EL MODAL
 		const fetchComentarios = async () => {
 			try {
-				const response = await fetch(
-					`http://127.0.0.1:5000/comments/${postId}`
+				const data = await fetchData("comments", postId, "GET");
+				const comentariosConUsuario = await assignUserNameToComments(
+					data.comentarios
 				);
-				if (!response.ok) {
-					throw new Error(`HTTP error! Status: ${response.status}`);
-				}
-				const data = await response.json();
-				setComentarios(data.comentarios);
+				setComentarios(comentariosConUsuario);
 			} catch (error) {
 				console.error("Error al intentar obtener comentarios: ", error);
+				throw new Error("Error al intentar obtener comentarios");
 			}
 		};
 
 		fetchComentarios();
 	}, [postId]);
+
+	
+	// VERIFICAMOS SI EL COMENTARIO PERTENECE AL USUARIO LOGUEADO ACTUALMENTE
+	const isCurrentUserComment = (userId) => {
+		const currentUser = localStorage.getItem("user");
+		const currentUserId = JSON.parse(currentUser).id;
+		return currentUserId === userId;
+	};
 
 	// ------------------ Desde aca, todo para editar el comentario ------------------
 	const handleEdit = (commentId) => {
@@ -40,32 +125,39 @@ const CardModalInfoComments = ({ postId }) => {
 
 	const handleSaveEdit = async (editedContent, commentId) => {
 		try {
-			const response = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}/${commentId}`,
-				{
-					method: "PATCH",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ contenido: editedContent }),
-				}
+			const endpoint = "http://127.0.0.1:5000/comments/";
+			const direction = postId + "/" + commentId;
+			const method = "PATCH";
+			const body = { contenido: editedContent };
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
+
+			await apiConnection(
+				endpoint,
+				direction,
+				method,
+				body,
+				headers
 			);
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! Status: ${response.status}`);
-			}
-
-			// Actualiza lista de comentarios con el contenido editado
-			const updatedResponse = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}`
-			);
-			if (!updatedResponse.ok) {
-				throw new Error(
-					`HTTP error! Status: ${updatedResponse.status}`
+			// Actualiza lista de comentarios con nombre de usuariocon el contenido editado (funcion fetchData y assignUserNameToComments)
+			try {
+				const data = await fetchData("comments", postId, "GET");
+				const comentariosConUsuario = await assignUserNameToComments(
+					data.comentarios
+				);
+				setComentarios(comentariosConUsuario);
+			} catch (error) {
+				console.error(
+					"Error al actualizar la lista de comentarios después de la edición: ",
+					error
 				);
 			}
-			const updatedData = await updatedResponse.json();
-			setComentarios(updatedData.comentarios);
+
+			// // const updatedData = await updatedResponse.json();
+			// setComentarios(response.comentarios);
 
 			// Oculta el formulario de edicion
 			setEditCommentId(null);
@@ -97,28 +189,30 @@ const CardModalInfoComments = ({ postId }) => {
 	// ------------------ Desde aca, todo para eliminar el comentario ------------------
 	const handleConfirmDelete = async () => {
 		try {
-			const response = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}/${deleteCommentId}`,
-				{
-					method: "DELETE",
-				}
-			);
+			const endpoint = "http://127.0.0.1:5000/comments/";
+			const direction = postId + "/" + deleteCommentId;
+			const method = "DELETE";
+			const body = false;
+			const headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! Status: ${response.status}`);
-			}
+			await apiConnection(endpoint, direction, method, body, headers);
 
-			// Actualizar la lista de comentarios despues de la eliminacion
-			const updatedResponse = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}`
-			);
-			if (!updatedResponse.ok) {
-				throw new Error(
-					`HTTP error! Status: ${updatedResponse.status}`
+			// Actualiza lista de comentarios con nombre de usuariocon el contenido editado (funcion fetchData y assignUserNameToComments)
+			try {
+				const data = await fetchData("comments", postId, "GET");
+				const comentariosConUsuario = await assignUserNameToComments(
+					data.comentarios
+				);
+				setComentarios(comentariosConUsuario);
+			} catch (error) {
+				console.error(
+					"Error al actualizar la lista de comentarios después de la edición: ",
+					error
 				);
 			}
-			const updatedData = await updatedResponse.json();
-			setComentarios(updatedData.comentarios);
 
 			// Ocultar modal de eliminacion
 			handleHideDeleteModal();
@@ -147,37 +241,36 @@ const CardModalInfoComments = ({ postId }) => {
 	};
 	// Guardar nuevo comentario
 	const handleSaveComment = async ({ usuario, comentario }) => {
+		const user = localStorage.getItem("user");
+		const userId = JSON.parse(user).id;
 		try {
-			const response = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						usuario,
-						contenido: comentario,
-					}),
-				}
-			);
+			const endpoint = "http://127.0.0.1:5000/comments/";
+			const direction = postId;
+			const method = "POST";
+			const body = {
+				usuario: userId,
+				contenido: comentario,
+			};
+			let headers = {
+				"Content-Type": "application/json",
+				Authorization: localStorage.getItem("token"),
+			};
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! Status: ${response.status}`);
-			}
+			await apiConnection(endpoint, direction, method, body, headers);
 
-			// Actualizar lista de comentarios despues de crear el comentario
-			const updatedResponse = await fetch(
-				`http://127.0.0.1:5000/comments/${postId}`
-			);
-
-			if (!updatedResponse.ok) {
-				throw new Error(
-					`HTTP error! Status: ${updatedResponse.status}`
+			// Actualiza lista de comentarios con nombre de usuariocon el contenido editado (funcion fetchData y assignUserNameToComments)
+			try {
+				const data = await fetchData("comments", postId, "GET");
+				const comentariosConUsuario = await assignUserNameToComments(
+					data.comentarios
+				);
+				setComentarios(comentariosConUsuario);
+			} catch (error) {
+				console.error(
+					"Error al actualizar la lista de comentarios después de la edición: ",
+					error
 				);
 			}
-			const updatedData = await updatedResponse.json();
-			setComentarios(updatedData.comentarios);
 
 			// Ocultar modal agregar comentario
 			setShowAgregarModal(false);
@@ -223,101 +316,121 @@ const CardModalInfoComments = ({ postId }) => {
 				</div>
 			</div>
 
-			{comentarios.map((comentario) => (
-				<div
-					className="card border border-primary mb-4"
-					key={comentario._id}>
-					{/* SI HAY ID DE COMENTARIO, MUESTRA LOS INPUTS PARA MODIFICAR EL COMENTARIO */}
-					{editCommentId === comentario._id ? (
-						<div className="card-body">
-							<textarea
-								rows="3"
-								value={comentario.contenido}
-								className="form-control mb-2"
-								onChange={(e) =>
-									handleEditContentChange(comentario._id, e)
-								}></textarea>
-							<button
-								className="btn btn-sm btn-success me-2"
-								onClick={() =>
-									handleSaveEdit(
-										comentario.contenido,
-										comentario._id
-									)
-								}
-								/* SI EL COMENTARIO ESTA VACIO NO SE PUEDE GUARDAR */
-								disabled={!comentario.contenido.trim()} // Deshabilitar si el contenido está vacío
-							>
-								Guardar
-							</button>
-							<button
-								className="btn btn-sm btn-secondary"
-								onClick={handleCancelEdit}>
-								Cancelar
-							</button>
-						</div>
-					) : (
-						/* SI NO HAY ID DE COMENTARIO SELECCIONADO, MUESTRA LOS COMENTARIOS DEL POSTEO */
-						<>
-							<div>
-								<div className="card-header text-start ps-1">
-									<b className="text-success">
-										{comentario.usuario}
-									</b>{" "}
-									comentó:
-								</div>
-								<div className="card-body text-start p-2 fs-6 fst-italic">
-									{comentario.contenido}
-								</div>
-								<div className="card-footer p-1">
-									<div className="row justify-content-between">
-										<div className="col align-items-start">
-											<p className="text-muted text-start align-items-start">
-												Publicado el{" "}
-												{comentario.fecha &&
-													comentario.fecha.substr(
-														8,
-														2
-													) +
-														"/" +
+			{comentarios.map((comentario) => {
+				const currentUserComment = isCurrentUserComment(
+						comentario.usuario
+					);
+
+				return (
+					<div
+						className="card border border-primary mb-4"
+						key={comentario._id}>
+						{/* SI HAY ID DE COMENTARIO, MUESTRA LOS INPUTS PARA MODIFICAR EL COMENTARIO */}
+						{editCommentId === comentario._id ? (
+							<div className="card-body">
+								<textarea
+									rows="3"
+									value={comentario.contenido}
+									className="form-control mb-2"
+									onChange={(e) =>
+										handleEditContentChange(
+											comentario._id,
+											e
+										)
+									}></textarea>
+								<button
+									className="btn btn-sm btn-success me-2"
+									onClick={() =>
+										handleSaveEdit(
+											comentario.contenido,
+											comentario._id
+										)
+									}
+									/* SI EL COMENTARIO ESTA VACIO NO SE PUEDE GUARDAR */
+									disabled={!comentario.contenido.trim()} // Deshabilitar si el contenido está vacío
+								>
+									Guardar
+								</button>
+								<button
+									className="btn btn-sm btn-secondary"
+									onClick={handleCancelEdit}>
+									Cancelar
+								</button>
+							</div>
+						) : (
+							/* SI NO HAY ID DE COMENTARIO SELECCIONADO, MUESTRA LOS COMENTARIOS DEL POSTEO */
+							<>
+								<div>
+									<div className="card-header text-start ps-1">
+										<b className="text-success">
+											{comentario.userName}
+										</b>{" "}
+										comentó:
+									</div>
+									<div className="card-body text-start p-2 fs-6 fst-italic">
+										{comentario.contenido}
+									</div>
+									<div className="card-footer p-1">
+										<div className="row justify-content-between">
+											<div className="col align-items-start">
+												<p className="text-muted text-start align-items-start">
+													Publicado el{" "}
+													{comentario.fecha &&
 														comentario.fecha.substr(
-															5,
+															8,
 															2
 														) +
-														"/" +
-														comentario.fecha.substr(
-															0,
-															4
-														)}
-											</p>
-										</div>
-										<div className="col-3 align-items-end justify-content-end me-0">
-											<button
-												className="btn btn-sm btn-warning me-2"
-												onClick={() =>
-													handleEdit(comentario._id)
-												}
-												title="Editar comentario">
-												<i className="fa-solid fa-regular fa-edit"></i>
-											</button>
-											<button
-												className="btn btn-sm btn-danger"
-												onClick={() =>
-													handleShowDeleteModal(
-														comentario._id
-													)
-												}
-												title="Eliminar comentario">
-												<i className="fa-regular fa-trash-can"></i>
-											</button>
+															"/" +
+															comentario.fecha.substr(
+																5,
+																2
+															) +
+															"/" +
+															comentario.fecha.substr(
+																0,
+																4
+															)}
+												</p>
+											</div>
+											<div className="col-4 align-items-end justify-content-end me-0">
+												<button
+													className="btn btn-sm btn-warning me-2"
+													onClick={() =>
+														handleEdit(
+															comentario._id
+														)
+													}
+													title="Editar comentario"
+													// SI EL COMENTARIO NO ES DEL USUARIO LOGUEADO, OCULTA EL BOTON
+													hidden={
+														!currentUserComment
+													}>
+													<i className="fa-solid fa-regular fa-edit"></i>
+												</button>
+												<button
+													className="btn btn-sm btn-danger"
+													onClick={() =>
+														handleShowDeleteModal(
+															comentario._id
+														)
+													}
+													title="Eliminar comentario"
+													// SI EL COMENTARIO NO ES DEL USUARIO LOGUEADO, OCULTA EL BOTON
+													hidden={
+														!currentUserComment
+													}>
+													<i className="fa-regular fa-trash-can"></i>
+												</button>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-						</>
-					)}
-				</div>
-			))}
+							</>
+						)}
+					</div>
+				);
+			})
+			}
 			{deleteCommentId && (
 				<ModalDelete
 					onCancel={handleHideDeleteModal}
