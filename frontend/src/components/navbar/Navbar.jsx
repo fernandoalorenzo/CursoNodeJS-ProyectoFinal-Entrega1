@@ -97,10 +97,7 @@ export default function Navbar() {
 											className="btn fa-solid fa-user-pen fa-xl my-3 text-warning"
 											title="Perfil">
 											<span
-												className="ms-3 text-uppercase fs-5 fw-normal"
-												style={{
-													fontFamily: "sans-serif",
-												}}>
+												className="ms-3 text-uppercase fs-5 fw-normal nav-menu-link">
 												{" "}
 												Perfil
 											</span>
@@ -110,11 +107,7 @@ export default function Navbar() {
 										<i
 											className="btn fa-solid fa-key fa-xl my-3 text-warning"
 											title="Contraseña">
-											<span
-												className="ms-4 text-uppercase fs-5 fw-normal"
-												style={{
-													fontFamily: "sans-serif",
-												}}>
+											<span className="ms-4 text-uppercase fs-5 fw-normal nav-menu-link">
 												Contraseña
 											</span>
 										</i>
@@ -126,10 +119,7 @@ export default function Navbar() {
 											title="Logout"
 											onClick={handleLogout}>
 											<span
-												className="ms-4 text-uppercase fs-5 fw-normal"
-												style={{
-													fontFamily: "sans-serif",
-												}}>
+												className="ms-4 text-uppercase fs-5 fw-normal nav-menu-link">
 												Salir
 											</span>
 										</i>
